@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>image_show</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="style.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="wrap" id="list">
+            <figure>
+                <img src="http://wx4.sinaimg.cn/mw690/eb00fcc3ly1fhu22lcmykj20jp0jpn3r.jpg" alt="">
+            </figure>
+            <figure>
+                <img src="http://wx4.sinaimg.cn/mw690/eb00fcc3ly1fhu22lcmykj20jp0jpn3r.jpg" alt="">
+            </figure>
+             <figure>
+                <img src="http://wx4.sinaimg.cn/mw690/eb00fcc3ly1fhu22lcmykj20jp0jpn3r.jpg" alt="">
+            </figure>
+        </div>
+        <script>
+            var list = document.getElementsByTagName("figure");
+            console.log(list.length);
+            switch (list.length) {
+                case 1:
+                    list[0].style.width = "100%";
+                    break;
+                case 2:
+                    list[0].style.width = "50%";
+                    list[1].style.width = "50%";                    
+                    break;
+                case 3:
+                    list[0].style.width = "50%";
+                    list[0].style.height = "100%";
+                    list[1].style.height = "50%";
+                    list[2].style.height = "50%";
+                                        
+                    break;    
+                default:
+                    break;
+            }
+        </script>
+    </body>
+</html>
