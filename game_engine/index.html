@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>game-engine</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>
+            window.onload = function () {
+                // define canvas
+                var canvas = document.createElement("canvas");
+                ctx = canvas.getContext("2d");
+
+                canvas.width = 400;
+                canvas.height = 600;
+
+                document.body.appendChild(canvas);
+
+
+                // define block
+                var Block = function () {
+                    this.width = 10;
+                    this.height = 10;
+
+                    this.pos = {
+                        x : 200,
+                        y : 200
+                    };
+                    this.vel = 5;
+                }
+
+                Block.prototype.go = function () {
+                    this.pos.y -= this.vel;
+                }
+                Block.prototype.back = function () {
+                    this.pos.y += this.vel;
+                }
+                Block.prototype.left = function () {
+                    this.pos.x -= this.vel;  
+                }
+                Block.prototype.right = function () {
+                    this.pos.x += this.vel;
+                }
+
+                // event
+                document.addEventListener('keydown',function (event) {
+                    if (event.keyCode === 87 ) {
+                        block.go();    
+                    }else if (event.keyCode === 83) {
+                        block.back();
+                    }else if (event.keyCode === 65) {
+                        block.left();
+                    }else if (event.keyCode === 68) {
+                        block.right();
+                    }
+                }); 
+                
+
+                //init block
+                var block = new Block(); 
+
+                // draw 
+                ctx.fillStyle = "black";
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+                
+
+                // 计时器
+                window.requestAnimFrame = 
+                window.requestAnimationFrame ||
+                window.webkitCancelAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame ||
+                window.msRequestAnimationFrame ||
+                function (callback) {
+                    return window.setTimeout(callback, 1000/60);
+                };
+
+                // init 
+                var i = 0;
+                (function loop () {
+                    // draw 
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(0,0,canvas.width, canvas.height);
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(block.pos.x, block.pos.y, block.width, block.height);
+
+                    requestAnimationFrame(loop);
+                })();
+            };
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>
