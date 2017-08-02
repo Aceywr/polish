@@ -18,15 +18,29 @@
 
                 // define block
                 var Block = function () {
-                    this.width = 10;
-                    this.height = 10;
-
                     this.pos = {
                         x : 200,
                         y : 200
                     };
-                    this.vel = 5;
+                    this.vel = 10;
+                    this.createPlayer = function (player, offset) {
+                        for (var i = 0; i < player.length; i++ ){
+                            for(var n = 0; n <player[i].length; n++) {
+                                if (player[i][n] === 1) {
+                                    ctx.fillStyle = 'white';
+                                    ctx.fillRect((n*10) + offset.x, (i*10) + offset.y,10, 10);
+                                } 
+                            }
+                        } 
+                    } 
                 }
+
+                // define player
+                var player = [
+                    [0,1,0],
+                    [1,1,1],
+                    [1,0,1]
+                ] 
 
                 Block.prototype.go = function () {
                     this.pos.y -= this.vel;
@@ -57,6 +71,7 @@
 
                 //init block
                 var block = new Block(); 
+                block.createPlayer(player, block.pos);
 
                 // draw 
                 ctx.fillStyle = "black";
@@ -80,9 +95,7 @@
                     // draw 
                     ctx.fillStyle = "black";
                     ctx.fillRect(0,0,canvas.width, canvas.height);
-                    ctx.fillStyle = "white";
-                    ctx.fillRect(block.pos.x, block.pos.y, block.width, block.height);
-
+                    block.createPlayer(player, block.pos);
                     requestAnimationFrame(loop);
                 })();
             };
