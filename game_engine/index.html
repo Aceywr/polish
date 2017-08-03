@@ -23,7 +23,15 @@
                         y : 200
                     };
                     this.vel = 10;
-                    this.createPlayer = function (player, offset) {
+                    this.rot = 2;
+                    this.player = [
+                        [0,1,0],
+                        [1,1,1],
+                        [1,0,1]
+                    ] 
+                }
+
+                Block.prototype.createPlayer = function (player, offset) {
                         for (var i = 0; i < player.length; i++ ){
                             for(var n = 0; n <player[i].length; n++) {
                                 if (player[i][n] === 1) {
@@ -33,26 +41,59 @@
                             }
                         } 
                     } 
-                }
 
-                // define player
-                var player = [
-                    [0,1,0],
-                    [1,1,1],
-                    [1,0,1]
-                ] 
+                Block.prototype.rotate = function (dir) {
+                    for (var y = 0; y < this.player.length; y++) {
+                        for (var x = 0; x < y; x++) {
+                             [
+                                this.player[x][y],
+                                this.player[y][x]
+                            ] = [
+                                this.player[y][x],
+                                this.player[x][y]
+                            ];
+                        }
+                    }
+
+                    if (dir == -1) {
+                        this.player.forEach(function (row) {
+                            row.reverse();
+                        })
+                    }
+                    
+
+                }
 
                 Block.prototype.go = function () {
-                    this.pos.y -= this.vel;
+                    if (this.rot === 1) {
+                        this.pos.y -= this.vel;
+                    }else{
+                        this.rot = 1;
+                        this.rotate(1);
+                    }
+                    
                 }
                 Block.prototype.back = function () {
-                    this.pos.y += this.vel;
+                    if (this.rot === 3) {
+                        this.pos.y += this.vel;
+                    }else{
+                        this.rot = 3;
+                    }
+                    
                 }
                 Block.prototype.left = function () {
-                    this.pos.x -= this.vel;  
+                    if (this.rot === 4) {  
+                        this.pos.x -= this.vel;  
+                    }else{
+                        this.rot = 4;
+                    }
                 }
                 Block.prototype.right = function () {
-                    this.pos.x += this.vel;
+                    if (this.rot === 2) {  
+                        this.pos.x += this.vel;  
+                    }else{
+                        this.rot = 2;
+                    }
                 }
 
                 // event
@@ -71,7 +112,6 @@
 
                 //init block
                 var block = new Block(); 
-                block.createPlayer(player, block.pos);
 
                 // draw 
                 ctx.fillStyle = "black";
@@ -95,7 +135,7 @@
                     // draw 
                     ctx.fillStyle = "black";
                     ctx.fillRect(0,0,canvas.width, canvas.height);
-                    block.createPlayer(player, block.pos);
+                    block.createPlayer(block.player, block.pos);
                     requestAnimationFrame(loop);
                 })();
             };
