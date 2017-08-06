@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>game-engine</title>
+        <title>game-demo</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script>
@@ -15,50 +15,35 @@
 
                 document.body.appendChild(canvas);
 
+                //define tile
+                var Tile = function () {
+                    this.width = 10;
+                    this.height = 10; 
+                }
+                Tile.prototype.drawTile = function (pos, y, x) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect((x*this.width) + pos.x, (y*this.height) + pos.y, this.width, this.height);
+                }
 
-                // define block
-                var Block = function () {
-                    this.pos = {
-                        x : 200,
-                        y : 200
-                    };
-                    this.vel = 10;
+                // tank 
+                var Tank = function (info) {
+
                     this.rot = 1;
-                    this.player = [
-                        [0,1,0],
-                        [1,1,1],
-                        [1,0,1]
-                    ];
+                    this.block = info.block;
+                    this.pos = info.pos;
+                    this.vel = info.vel;
+                    this.width = this.block[0].length * tile.width;
+                    this.height = this.block.length * tile.height;
+                    this.blockFront = game.deepCopy(this.block);
+                    this.fireOf = {
+                        x : 1,
+                        y : -1
+                    };
 
-                    this.playerFront = [
-                        [0,1,0],
-                        [1,1,1],
-                        [1,0,1]
-                    ];
-                }
-                Block.prototype.deepCopy = function (arr) {
-                    var newArr = [];
-                    for (var i = 0; i < arr.length; i++){
-                        newArr[i] = [];
-                        for(var n = 0; n < arr[i].length; n++) {
-                        newArr[i][n] = arr[i][n];    
-                        }
-                    }
-                    return newArr;
+                    this.fires = [];
                 }
 
-                Block.prototype.drawPlayer = function (player, offset) {
-                        for (var i = 0; i < player.length; i++ ){
-                            for(var n = 0; n < player[i].length; n++) {
-                                if (player[i][n] === 1) {
-                                    ctx.fillStyle = 'white';
-                                    ctx.fillRect((n*10) + offset.x, (i*10) + offset.y,10, 10);
-                                } 
-                            }
-                        } 
-                    } 
-
-                Block.prototype.rotateLeft = function (player) {
+                Tank.prototype.rotateLeft = function (player) {
                     for (var y = 0; y < player.length; y++) {
                         for (var x = 0; x < y; x++) {
                              [
@@ -72,82 +57,250 @@
                     }
                     // console.log(this.playerFront, this.player);
                 }
-
-                Block.prototype.rotate = function (dir) {
+                Tank.prototype.rotate = function (dir) {
                     if (dir == 1) {
-                        this.player = this.deepCopy(this.playerFront);
-                        this.player.reverse();
+                        var b = game.deepCopy(this.blockFront);
+                        b.reverse();
                     } else if (dir == -1) {
-                        this.player = this.deepCopy(this.playerFront);
-                        this.rotateLeft(this.player);
-                        this.player.forEach(function (row) {
+                        var b = game.deepCopy(this.blockFront);
+                        this.rotateLeft(b);
+                        b.forEach(function (row) {
                             row.reverse();
                         })
                     } else {
-                        this.player = this.deepCopy(this.playerFront);
-                        this.rotateLeft(this.player);
+                        var b = game.deepCopy(this.blockFront);
+                        this.rotateLeft(b);
                         
                     }
 
-                    return this.player;
+                    return b ;
                 }
 
-                Block.prototype.go = function () {
+                Tank.prototype.up = function () {
                     if (this.rot === 1) {
                         if (this.pos.y > 0) {
                             this.pos.y -= this.vel;
                         }
                     }else{
                         this.rot = 1;
-                        this.player = this.deepCopy(this.playerFront);
+                        this.block = game.deepCopy(this.blockFront);
                     }
                     // console.log(this.rot);
                     
                 }
-                Block.prototype.back = function () {
+                Tank.prototype.down = function () {
                     if (this.rot === 3) {
-                        this.pos.y += this.vel;
+                        if (this.pos.y < (canvas.height - this.height)) {
+                            this.pos.y += this.vel;
+                        }
                     }else{
                         this.rot = 3;
-                        this.player = this.rotate(1);
+                        this.block = this.rotate(1);
                     }
                     // console.log(this.rot);
                 }
-                Block.prototype.left = function () {
+                Tank.prototype.left = function () {
                     if (this.rot === 4) {  
-                        this.pos.x -= this.vel;  
+                        if (this.pos.x > 0) {
+                            this.pos.x -= this.vel; 
+                        }
+                         
                     }else{
                         this.rot = 4;
-                        this.player = this.rotate();
+                        this.block = this.rotate();
                     }
                     // console.log(this.rot);
                 }
-                Block.prototype.right = function () {
-                    if (this.rot === 2) {  
-                        this.pos.x += this.vel;  
+                Tank.prototype.right = function () {
+                    if (this.rot === 2) { 
+                        if (this.pos.x < (canvas.width - this.width)) {
+                            this.pos.x += this.vel; 
+                        }
+                         
                     }else{
                         this.rot = 2;
-                        this.player = this.rotate(-1);
+                        this.block = this.rotate(-1);
                     }
                     // console.log(this.rot);
                 }
-
-                // event
-                document.addEventListener('keydown',function (event) {
-                    if (event.keyCode === 87 ) {
-                        block.go();    
-                    }else if (event.keyCode === 83) {
-                        block.back();
-                    }else if (event.keyCode === 65) {
-                        block.left();
-                    }else if (event.keyCode === 68) {
-                        block.right();
+                Tank.prototype.fire = function () {
+                    this.fires.push(new Fire(pTank.rot));
+                    console.log(this.fires);
+                }
+                // Fire
+                var Fire = function (rot) {
+                    this.width = 10;
+                    this.height = 10;
+                    this.islive = true;
+                    this.rot = rot;
+                    this.pos = this.getPos(pTank.pos, this.rot);
+                    
+                }    
+                Fire.prototype.getPos = function (pos, rot) {
+                    var p = {};
+                    switch (rot) {
+                        case 1:
+                            p.x = 10 + pos.x
+                            p.y = pos.y - 10   
+                            break;
+                        case 2:
+                            p.x = 30 + pos.x
+                            p.y = pos.y + 10   
+                            break;
+                        case 3:
+                            p.x = pos.x + 10
+                            p.y = pos.y + 30   
+                            break;
+                        case 4:
+                            p.x = pos.x - 10
+                            p.y = pos.y + 10   
+                            break;
+                        default:
+                            break;
                     }
-                }); 
+
+                    return p
+                }
+                Fire.prototype.draw = function (pos) {
+                    if (this.islive) {
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(pos.x, pos.y, this.width, this.height);
+                    }
+                }
+                Fire.prototype.move = function (rot) {
+                    switch (rot) {
+                        case 1:
+                            this.pos.y -= 5
+                            break;
+                        case 2:
+                            this.pos.x += 5  
+                            break;
+                        case 3:
+                            this.pos.y += 5   
+                            break;
+                        case 4:
+                            this.pos.x -= 5   
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+
+                // enemy 
+
+                // define Player
+                var Player = function () {
+                    this.pos = {
+                        x : 200,
+                        y : 200
+                    };
+                    this.vel = 10;
+                    this.block = [
+                        [0,1,0],
+                        [1,1,1],
+                        [1,0,1]
+                    ];
+                    
+                    this.health = 1;
+
+                    this.key = {
+                        up : false,
+                        down : false,
+                        left : false,
+                        right : false
+                    }
+
+                    document.addEventListener('keydown', this.keydown.bind(this));
+                    document.addEventListener('keyup', this.keyup.bind(this)); 
+
+                }
+
+                Player.prototype.keydown = function () {
+                    if (event.keyCode === 87 ) {
+                        this.key.up = true;   
+                    }else if (event.keyCode === 83) {
+                        this.key.down = true;
+                    }else if (event.keyCode === 65) {
+                        this.key.left = true;
+                    }else if (event.keyCode === 68) {
+                        this.key.right = true;
+                    }else if (event.keyCode === 32) {
+                        pTank.fire();
+                    }
+                }
+                Player.prototype.keyup = function () {
+                    if (event.keyCode === 87 ) {
+                        this.key.up = false;   
+                    }else if (event.keyCode === 83) {
+                        this.key.down = false;
+                    }else if (event.keyCode === 65) {
+                        this.key.left = false;
+                    }else if (event.keyCode === 68) {
+                        this.key.right = false;
+                    }         
+                }
+
+                Player.prototype.move = function () {
+                    if (this.key.up) {
+                        pTank.up();
+                    } else if (this.key.down) {
+                        pTank.down();
+                    } else if (this.key.left) {
+                        pTank.left();
+                    } else if (this.key.right) {
+                        pTank.right();
+                    }
+                }
+                
+                
+                var Game = function () {
+                     
+                    
+                    
+                }
+                Game.prototype.deepCopy = function (arr) {
+                    var newArr = [];
+                    for (var i = 0; i < arr.length; i++){
+                        newArr[i] = [];
+                        for(var n = 0; n < arr[i].length; n++) {
+                        newArr[i][n] = arr[i][n];    
+                        }
+                    }
+                    return newArr;
+                }
+                
+                Game.prototype.drawTank = function (player, pos) {
+                    for (var y = 0; y < player.length; y++ ){
+                        for(var x = 0; x < player[y].length; x++) {
+                            if (player[y][x] === 1) {
+                                tile.drawTile(pos, y, x);
+                            } 
+                        }
+                    } 
+                }
+                Game.prototype.drawFire = function () {
+                    for (var i = 0; i < pTank.fires.length; i++) {
+
+                        pTank.fires[i].draw(pTank.fires[i].pos)
+                        pTank.fires[i].move(pTank.fires[i].rot)
+                    }
+                } 
+                Game.prototype.update = function () {
+                    player.move();
+                    this.drawTank(pTank.block, pTank.pos);
+                    this.drawFire();
+                }
+                // event
+                
                 
 
-                //init block
-                var block = new Block(); 
+                //init Player
+                var game = new Game();
+                var tile = new Tile();
+                var player = new Player();
+                var pTank = new Tank(player);
+                
 
                 // draw 
                 ctx.fillStyle = "black";
@@ -161,17 +314,16 @@
                 window.mozRequestAnimationFrame ||
                 window.oRequestAnimationFrame ||
                 window.msRequestAnimationFrame ||
-                function (callback) {
-                    return window.setTimeout(callback, 1000/60);
+                function (calldown) {
+                    return window.setTimeout(calldown, 1000/60);
                 };
 
-                // init 
-                var i = 0;
+                // init
                 (function loop () {
                     // draw 
                     ctx.fillStyle = "black";
                     ctx.fillRect(0,0,canvas.width, canvas.height);
-                    block.drawPlayer(block.player, block.pos);
+                    game.update();
                     requestAnimationFrame(loop);
                 })();
             };

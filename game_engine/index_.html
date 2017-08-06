@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>game v0.1</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <script>
+            var canvas = document.createElement("canvas")
+            var ctx = canvas.getContext("2d")
+
+            canvas.width = 400
+            canvas.height = 600
+
+            document.body.appendChild(canvas)
+
+            ctx.fillStyle = "black"
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+            //
+            function log(tag) {
+                console.log(tag)
+            }
+            function inherit(subType, superType) {
+                var prototype = Object(superType.prototype)
+                prototype.constructor = subType
+                subType.prototype = prototype
+            }
+            
+            // Game
+            var Game = function() {
+        
+            }
+
+            Game.prototype.deepCopy = function (arr) {
+                // console.log(arr);
+                var newArr = [];
+                for (var i = 0; i < arr.length; i++){
+                    newArr[i] = [];
+                    for(var n = 0; n < arr[i].length; n++) {
+                        newArr[i][n] = arr[i][n];    
+                    }
+                }
+                return newArr;
+            }
+
+
+            // Tile
+            var Tile = function() {
+                this.width = 10
+                this.height = 10
+            }
+            Tile.prototype.drawTile = function(pos) {
+                ctx.fillStyle = 'white'
+                ctx.fillRect(pos.x, pos.y, this.width, this.height)
+            }
+
+            var Player = function () {
+                Game.call(this)
+                this.rot = 1
+                this.block = [
+                    [0,1,0],
+                    [1,1,1],
+                    [1,0,1]
+                ]
+                this.pos = {
+                    x : 100,
+                    y : 100
+                }
+                this.vel = 10
+            }
+            inherit(Player, Game)
+
+
+            var p = new Player();
+            log(p.deepCopy(p.block))
+            // init
+            // var tile = new Tile()
+            // tile.drawTile({x : 10, y : 10})
+        </script>
+    </body>
+</html>
