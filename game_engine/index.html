@@ -131,7 +131,6 @@
                 var Fire = function (rot) {
                     this.width = 10;
                     this.height = 10;
-                    this.islive = true;
                     this.rot = rot;
                     this.pos = this.getPos(pTank.pos, this.rot);
                     
@@ -161,11 +160,9 @@
 
                     return p
                 }
-                Fire.prototype.draw = function (pos) {
-                    if (this.islive) {
+                Fire.prototype.draw = function (fire) {
                         ctx.fillStyle = 'white';
-                        ctx.fillRect(pos.x, pos.y, this.width, this.height);
-                    }
+                        ctx.fillRect(fire.pos.x, fire.pos.y, this.width, this.height);
                 }
                 Fire.prototype.move = function (rot) {
                     switch (rot) {
@@ -187,6 +184,21 @@
 
                 }
 
+                Fire.prototype.changelive = function (fire) {
+                    if (fire.pos.x < 0 || fire.pos.x > 400 || fire.pos.y < 0 || fire.pos.y > 600) {
+                        fire.remove(fire)
+                    }
+                }
+
+                Fire.prototype.remove = function (fire) {
+                    for (var i = 0; i < pTank.fires.length; i++) {
+                        if(pTank.fires[i] == fire) {
+                            pTank.fires.splice(i, 1)
+                            break
+                        }
+                    }
+                }
+
                 // enemy 
 
                 // define Player
@@ -195,7 +207,7 @@
                         x : 200,
                         y : 200
                     };
-                    this.vel = 10;
+                    this.vel = 5;
                     this.block = [
                         [0,1,0],
                         [1,1,1],
@@ -282,8 +294,9 @@
                 Game.prototype.drawFire = function () {
                     for (var i = 0; i < pTank.fires.length; i++) {
 
-                        pTank.fires[i].draw(pTank.fires[i].pos)
+                        pTank.fires[i].draw(pTank.fires[i])
                         pTank.fires[i].move(pTank.fires[i].rot)
+                        pTank.fires[i].changelive(pTank.fires[i])
                     }
                 } 
                 Game.prototype.update = function () {
@@ -326,7 +339,7 @@
                     game.update();
                     requestAnimationFrame(loop);
                 })();
-            };
+            }
         </script>
     </head>
     <body>

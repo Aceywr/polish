@@ -47,7 +47,7 @@
             Game.prototype.draw = function (player, pos) {
                 for (var y = 0; y < player.length; y++ ){
                     for(var x = 0; x < player[y].length; x++) {
-                        if (player[y][x] === 1) {
+                        if (player[y][x] > 0) {
                             ctx.fillStyle = 'white';
                             ctx.fillRect((x*10) + pos.x, (y*10) + pos.y, 10, 10);
                         } 
@@ -55,33 +55,179 @@
                 } 
             }
 
-            var Player = function () {
+            var Tank = function () {
                 Game.call(this)
-                this.rot = 1
                 this.block = [
-                    [0,1,0],
+                    [0,2,0],
                     [1,1,1],
                     [1,0,1]
                 ]
-                this.pos = {
-                    x : 100,
-                    y : 100
+                this.width = this.block[0].length * 10
+                this.height = this.block.length * 10
+                this.vel = 10
+                this.fires = []
+            }
+            inherit(Tank, Game)
+            Tank.prototype.rotateLeft = function () {
+                for (var y = 0; y < this.block.length; y++) {
+                    for (var x = 0; x < y; x++) {
+                        [
+                            this.block[x][y],
+                            this.block[y][x]
+                        ] = [
+                            this.block[y][x],
+                            this.block[x][y]
+                        ];
+                    }
                 }
+            }
+
+            Tank.prototype.turn = function(dir) {
+                if(dir == 'left') {
+                    this.rotateLeft()
+                }else if(dir == 'right') {
+                    this.rotateLeft()
+                    this.block.forEach(function(row) {
+                        row.reverse()
+                    })
+                }
+            }
+
+            Tank.prototype.dirction = function() {
+                for (var y = 0; y < this.block.length; y++ ){
+                    for(var x = 0; x < this.block[y].length; x++) {
+                        if (this.block[y][x] === 2) {
+                            if(y == 0 && x == 1) {
+                                return 1
+                            }else if(y == 1 && x == 0) {
+                                return 4
+                            }else if(y == 2 && x == 1) {
+                                return 3
+                            }else if(y == 1 && x == 2) {
+                                return 2
+                            }
+                        } 
+                    }
+                }
+            } 
+            Tank.prototype.go = function() {
+                switch (this.dirction()) {
+                    case 1:
+                        this.pos.y -= this.vel
+                        break;
+                    case 2:
+                        this.pos.x += this.vel
+                        break;
+                    case 3:
+                        this.pos.y += this.vel
+                        break;
+                    case 4:
+                        this.pos.x -= this.vel
+                        break;
+                
+                    default:
+                        break;
+                }
+            }
+            Tank.prototype.fire = function () {
+                var dir = this.dirction()
+                var pos = this.pos
+                this.fires.push(new Fire(dir, pos))
+                log(this.fires)
+            }
+            
+            
+
+            var Fire = function (dir, pos) {
+                this.w = 10;
+                this.h = 10;
+                this.fireVel = 5;
+                this.dir = dir;
+                this.pos = pos;
+                this.firePos = this.getPos();
+            }
+            Fire.prototype.getPos = function() {
+                var p = {}
+                switch (this.dir) {
+                    case 1:
+                        p.x = 10 + this.pos.x
+                        p.y = this.pos.y - 10   
+                        break;
+                    case 2:
+                        p.x = 30 + this.pos.x
+                        p.y = this.pos.y + 10   
+                        break;
+                    case 3:
+                        p.x = this.pos.x + 10
+                        p.y = this.pos.y + 30   
+                        break;
+                    case 4:
+                        p.x = this.pos.x - 10
+                        p.y = this.pos.y + 10   
+                        break;
+                    default:
+                        break;
+                }
+                return p
+            }
+            Fire.prototype.Drawfire = function () {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(this.firePos.x, this.firePos.y, this.w, this.h);
+            }
+            Fire.prototype.move = function () {
+                switch (this.dir) {
+                    case 1:
+                        this.firePos.y -= this.fireVel
+                        break;
+                    case 2:
+                        this.firePos.x += this.fireVel  
+                        break;
+                    case 3:
+                        this.firePos.y += this.fireVel   
+                        break;
+                    case 4:
+                        this.firePos.x -= this.fireVel   
+                        break;
+                    default:
+                        break;
+                }
+            }
+            Fire.prototype.remove = function(fires) {
+                if (this.firePos.x < 0 || this.firePos.x > 400 || this.firePos.y < 0 || this.firePos.y > 600) {
+                    for (var i = 0; i < fires.length; i++) {
+                        if(fires[i] == this) {
+                            fires.splice(i, 1)
+                            break
+                        }
+                    }
+                }
+                return fires
+            }
+            
+
+            var Player = function() {
+                Tank.call(this)
+                this.pos = {
+                    x : 350,
+                    y : 550
+                }
+                this.block = [
+                    [0,2,0],
+                    [1,1,1],
+                    [1,0,1]
+                ]
+                this.rot = 1
                 this.key = {
                     up : false,
                     down : false,
                     left : false,
                     right : false
                 }
-                this.width = this.block[0].length * 10
-                this.height = this.block.length * 10
                 this.blockFront = this.deepCopy(this.block)
-                this.vel = 10
-
                 document.addEventListener('keydown', this.keydown.bind(this));
-                document.addEventListener('keyup', this.keyup.bind(this)); 
+                document.addEventListener('keyup', this.keyup.bind(this))
             }
-            inherit(Player, Game)
+            inherit(Player, Tank)
             Player.prototype.rotateLeft = function (player) {
                 for (var y = 0; y < player.length; y++) {
                     for (var x = 0; x < y; x++) {
@@ -160,13 +306,15 @@
             }
             Player.prototype.keydown = function () {
                 if (event.keyCode === 87 ) {
-                    this.key.up = true;   
+                    this.key.up = true; 
                 }else if (event.keyCode === 83) {
                     this.key.down = true;
                 }else if (event.keyCode === 65) {
                     this.key.left = true;
                 }else if (event.keyCode === 68) {
                     this.key.right = true;
+                }else if (event.keyCode === 32) {
+                    this.fire();
                 }
             }
             Player.prototype.keyup = function () {
@@ -180,9 +328,9 @@
                     this.key.right = false;
                 }         
             }
-            Player.prototype.move = function() {
+            Player.prototype.move = function () {
                 if (this.key.up) {
-                    this.up();
+                    this.up()
                 } else if (this.key.down) {
                     this.down();
                 } else if (this.key.left) {
@@ -193,9 +341,31 @@
             }
             Player.prototype.update = function() {
                 this.draw(this.block, this.pos)
-                this.move();
+                this.move()
+                for (var i = 0; i < this.fires.length; i++) {
+                    this.fires[i].Drawfire()
+                    this.fires[i].move()
+                    this.fires = this.fires[i].remove(this.fires)    
+                }
             }
-            
+
+            var Enemy = function() {
+                Tank.call(this)
+                this.pos = {
+                    x : 20,
+                    y : 20
+                }
+                this.block = [
+                    [1,0,1],
+                    [1,1,1],
+                    [0,2,0]
+                ]
+            }
+            inherit(Enemy, Tank)
+            Enemy.prototype.update = function(haha) {
+                this.draw(this.block, this.pos)                
+            }
+
 
             // 计时器
             window.requestAnimFrame = 
@@ -205,17 +375,19 @@
             window.oRequestAnimationFrame ||
             window.msRequestAnimationFrame ||
             function (calldown) {
-                return window.setTimeout(calldown, 1000/60);
+                return window.setTimeout(calldown, 1000/30);
             }
 
             // init
             var player = new Player();
+            var enemy = new Enemy();
             (function loop () {
                 // draw bg 
                 ctx.fillStyle = "black";
                 ctx.fillRect(0,0,canvas.width, canvas.height);
                 //update
                 player.update();
+                enemy.update();
                 requestAnimationFrame(loop);
             })();
         </script>
