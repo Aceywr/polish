@@ -72,7 +72,7 @@
                 ]
                 this.width = this.block[0].length * 10
                 this.height = this.block.length * 10
-                this.vel = 10
+                this.vel = 5
                 this.fires = []
             }
             inherit(Tank, Game)
@@ -143,13 +143,33 @@
                 this.fires.push(new Fire(dir, pos))
                 log(this.fires)
             }
+
+            var collide = function(fire, tank) {
+                var ft = fire.firePos.y,
+                    fb = fire.firePos.y + fire.h,
+                    fl = fire.firePos.x,
+                    fr = fire.firePos.x + fire.w,
+                    tt = tank.pos.y,
+                    tb = tank.pos.y + tank.height,
+                    tl = tank.pos.x,
+                    tr = tank.pos.x + tank.width;
+
+
+                // if((ft > (tt - fire.h)) && (fb < (tb + fire.h)) && (fl > (tl - fire.w)) && (fr < (tr + fire.w))) {
+                //     log("collide")
+                // }
+
+                if(ft < tb && fb > tt && fl <tr && fr > tl) {
+                    return true
+                }
+            }
             
             
 
             var Fire = function (dir, pos) {
                 this.w = 10;
                 this.h = 10;
-                this.fireVel = 5;
+                this.fireVel = 8;
                 this.dir = dir;
                 this.pos = pos;
                 this.firePos = this.getPos();
@@ -200,16 +220,21 @@
                         break;
                 }
             }
-            Fire.prototype.remove = function(fires) {
-                if (this.firePos.x < 0 || this.firePos.x > 400 || this.firePos.y < 0 || this.firePos.y > 600) {
-                    for (var i = 0; i < fires.length; i++) {
+
+            Fire.prototype.destroy = function(fires) {
+                for (var i = 0; i < fires.length; i++) {
                         if(fires[i] == this) {
                             fires.splice(i, 1)
                             break
                         }
                     }
-                }
                 return fires
+            }
+
+            Fire.prototype.remove = function(fires) {
+                if (this.firePos.x < 0 || this.firePos.x > 400 || this.firePos.y < 0 || this.firePos.y > 600) {
+                    return true
+                }
             }
             
 
@@ -353,15 +378,17 @@
                 for (var i = 0; i < this.fires.length; i++) {
                     this.fires[i].Drawfire()
                     this.fires[i].move()
-                    this.fires = this.fires[i].remove(this.fires)    
+                    if(collide(this.fires[i], enemy) || this.fires[i].remove(this.fires)) {
+                        this.fires = this.fires[i].destroy(this.fires)
+                    }      
                 }
             }
 
             var Enemy = function() {
                 Tank.call(this)
                 this.pos = {
-                    x : 20,
-                    y : 20
+                    x : 200,
+                    y : 300
                 }
                 this.block = [
                     [1,0,1],
